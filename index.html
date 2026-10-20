@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <title>Mi Pocket</title>
 <meta name="theme-color" content="#3F6F9E">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -42,6 +42,18 @@
 html,body{min-height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:15px;line-height:1.4;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
+*,*::before,*::after{box-sizing:border-box}
+html,body{overflow-x:hidden;max-width:100%}
+#app,.view,.sheet,.card,.grp,.box,.field,.note,.hero,.alert,.tile{min-width:0;max-width:100%}
+.sheet{overflow-x:hidden;width:100%}
+.two>*,.grid2>*,.grid3>*,.row>*,.kv>*{min-width:0}
+input,select,textarea{max-width:100%;min-width:0}
+input[type=date],input[type=month]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;text-align:left;line-height:44px}
+input[type=date]::-webkit-date-and-time-value,input[type=month]::-webkit-date-and-time-value{text-align:left}
+.itx b,.itx small,.kv b,.kv span,.gt b,.diag span,.tog span,.note,.alert,.mcard{overflow-wrap:anywhere}
+.chips{max-width:100%}
+.cbtn{max-width:100%;white-space:normal;text-align:left}
+svg{max-width:100%}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #app{max-width:520px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 130px}
@@ -1053,6 +1065,11 @@ async function boot(){
     S.local=true;Object.keys(S.got).forEach(k=>S.got[k]=true);
     try{const raw=localStorage.getItem(LSKEY);if(raw){const d=JSON.parse(raw);S.cfg=d.cfg||null;S.recs=d.recs||{};S.movs=d.movs||{};S.saldos=d.saldos||{}}}catch(e){logErr('Leer datos guardados: '+e.message,'arranque')}
     try{const er=JSON.parse(localStorage.getItem(LSERR)||'[]');er.forEach(e=>{if(!ERRS.find(x=>x.t===e.t&&x.msg===e.msg))ERRS.push(e)});ERRS.sort((a,b)=>a.t<b.t?1:-1)}catch(_){}
+    // Corrección única: el ahorro semanal es de 10 € (la copia inicial traía 40 €)
+    try{if(!localStorage.getItem('misfinanzas-fix-semanal10')){let n=0;
+      const r=S.recs['ah-semanal'];if(r&&r.importe===40){S.recs['ah-semanal']={...r,importe:10};n++}
+      Object.keys(S.movs).forEach(id=>{const m=S.movs[id];if(/^(m-ahsem-|s09-ahsem-|j06-ahsem-)/.test(id)&&m.importe===40){S.movs[id]={...m,importe:10};n++}});
+      if(n)saveLocal();if(Object.keys(S.recs).length)localStorage.setItem('misfinanzas-fix-semanal10','1')}}catch(_){}
     buildOcc();render();return}
   S.db=db;
   const fail=e=>{logErr('Conexión: '+(e&&e.code),'db');if(e&&e.code==='revoked')toast('Ya no tienes acceso a estos datos.')};
